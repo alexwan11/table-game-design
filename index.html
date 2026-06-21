@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>中国跳棋 - 旋转圆盘 + 抽卡机关</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="main-frame">
+    <div class="left-frame">
+      <canvas id="board-canvas" width="600" height="700"></canvas>
+    </div>
+
+    <div class="right-frame">
+      <h1>中国跳棋</h1>
+
+      <div id="status-box" class="status-box"></div>
+      <div id="hand-count" class="hand-count"></div>
+
+      <div class="btn-row">
+        <button id="btn-reset">重新开始</button>
+        <button id="btn-end-jump" disabled>结束跳跃</button>
+      </div>
+
+      <h2>① 走棋 / 跳棋</h2>
+      <p class="hint">点击己方棋子选中，再点棋盘上高亮的位置完成移动或跳跃。</p>
+
+      <hr>
+
+      <h2>② 打出卡牌转圆盘（与①二选一）</h2>
+      <div class="circle-btns">
+        <button id="circle-A" class="circle-btn" style="background:#e67e22">圆盘 A（橙）</button>
+        <button id="circle-B" class="circle-btn" style="background:#9b59b6">圆盘 B（紫）</button>
+        <button id="circle-C" class="circle-btn" style="background:#16a085">圆盘 C（青）</button>
+      </div>
+
+      <div class="dir-row">
+        <label><input type="radio" name="dir" id="dir-cw" value="cw"> 顺时针 ↻</label>
+        <label><input type="radio" name="dir" id="dir-ccw" value="ccw" checked> 逆时针 ↺</label>
+      </div>
+
+      <p class="label-sm">选择要打出的卡牌（决定旋转格数）:</p>
+      <div id="card-select" class="card-select"></div>
+
+      <div class="btn-row">
+        <button id="btn-confirm" class="confirm-btn" disabled>确认旋转</button>
+        <button id="btn-cancel" disabled>取消</button>
+      </div>
+
+      <p class="tip">
+        提示：每张卡牌标注固定的旋转格数(1格=60°)，打出后即消耗，手牌打光后将无法再旋转圆盘
+        （仍可正常走棋/跳跃）。转圆盘会带动盘内所有同心环上的棋子（含对方棋子）整体一起转动，圆心棋子不动。
+      </p>
+      <p class="tip">
+        设计说明：方向(顺时针/逆时针)始终可自由选择，所以 <b>60°与300°</b>、<b>120°与240°</b>
+        其实是完全等价的两种说法（互为相反方向）。为避免出现"看似稀有却毫无额外价值"的虚假稀有度，
+        本版本只保留三种互不重复的卡牌：<b>60° / 120° / 180°</b>。
+      </p>
+    </div>
+  </div>
+
+  <div id="win-banner" class="win-banner hidden"></div>
+
+  <script src="js/boardGeometry.js"></script>
+  <script src="js/cards.js"></script>
+  <script src="js/gameState.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

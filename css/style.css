@@ -1,0 +1,184 @@
+/* ----------------------------------------------------------------------
+ * style.css
+ * 还原原 tkinter 版本的配色与左右分栏布局。
+ * ------------------------------------------------------------------- */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #f5f6f7;
+  font-family: "Microsoft YaHei", "PingFang SC", "Heiti SC", sans-serif;
+  color: #2c3e50;
+}
+
+.main-frame {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.left-frame canvas {
+  display: block;
+  background: #ecf0f1;
+  border-radius: 8px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}
+
+.right-frame {
+  width: 300px;
+  flex: 0 0 300px;
+  background: #dfe6e9;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.right-frame h1 {
+  margin: 4px 0 12px;
+  font-size: 20px;
+  text-align: center;
+}
+
+.right-frame h2 {
+  font-size: 14px;
+  margin: 16px 0 4px;
+}
+
+.status-box {
+  background: #2c3e50;
+  color: #fff;
+  font-weight: bold;
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 10px;
+  border-radius: 6px;
+  min-height: 40px;
+}
+
+.hand-count {
+  font-size: 12px;
+  color: #555;
+  text-align: center;
+  margin: 6px 0 2px;
+}
+
+.btn-row {
+  display: flex;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.btn-row button {
+  flex: 1;
+  padding: 7px 4px;
+  border: none;
+  border-radius: 5px;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+
+.btn-row button:hover:not(:disabled) { filter: brightness(0.95); }
+.btn-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.hint, .tip {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.6;
+  margin: 4px 0;
+}
+
+hr {
+  border: none;
+  border-top: 2px solid #b2bec3;
+  margin: 12px 0;
+}
+
+.circle-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.circle-btn {
+  color: #fff;
+  border: none;
+  padding: 9px;
+  border-radius: 5px;
+  font-weight: bold;
+  font-size: 13px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, opacity 0.15s;
+}
+
+.circle-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.circle-btn.active { box-shadow: inset 0 0 0 3px #2c3e50; }
+
+.dir-row {
+  display: flex;
+  justify-content: space-around;
+  margin: 10px 0;
+  font-size: 13px;
+}
+
+.dir-row label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+
+.label-sm {
+  font-size: 13px;
+  margin: 12px 0 4px;
+}
+
+.card-select {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 54px;
+  align-items: center;
+}
+
+.card-btn {
+  width: 56px;
+  height: 52px;
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  font-weight: bold;
+  font-size: 12px;
+  line-height: 1.3;
+  cursor: pointer;
+  transition: box-shadow 0.15s, opacity 0.15s;
+}
+
+.card-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.card-btn.selected { box-shadow: inset 0 0 0 3px #f1c40f; }
+
+.placeholder { font-size: 12px; color: #95a0a6; }
+
+.confirm-btn { background: #27ae60 !important; color: #fff; }
+
+.win-banner {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2c3e50;
+  color: #fff;
+  padding: 14px 30px;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+.win-banner.hidden { display: none; }
+
+@media (max-width: 760px) {
+  .main-frame { flex-direction: column; align-items: center; }
+  .right-frame { width: 100%; max-width: 600px; }
+}
