@@ -182,3 +182,202 @@ hr {
   .main-frame { flex-direction: column; align-items: center; }
   .right-frame { width: 100%; max-width: 600px; }
 }
+
+/* ================================================================
+   大厅遮罩样式（在线对战版新增）
+   ================================================================ */
+
+.lobby-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  backdrop-filter: blur(4px);
+}
+
+.lobby-overlay.hidden {
+  display: none;
+}
+
+.lobby-box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 36px 40px;
+  width: 360px;
+  max-width: 94vw;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  text-align: center;
+}
+
+.lobby-title {
+  margin: 0 0 4px;
+  font-size: 24px;
+  color: #2c3e50;
+}
+
+.lobby-sub {
+  font-size: 13px;
+  color: #7f8c8d;
+  margin: 0 0 18px;
+}
+
+.lobby-status {
+  background: #f0f4f8;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #34495e;
+  margin-bottom: 22px;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lobby-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lobby-btn {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #bdc3c7;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  color: #2c3e50;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+}
+
+.lobby-btn:hover:not(:disabled) {
+  border-color: #3498db;
+  color: #3498db;
+}
+
+.lobby-btn.primary {
+  background: #3498db;
+  border-color: #3498db;
+  color: #fff;
+}
+
+.lobby-btn.primary:hover:not(:disabled) {
+  background: #2980b9;
+  border-color: #2980b9;
+}
+
+.lobby-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.lobby-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #bdc3c7;
+  font-size: 13px;
+}
+
+.lobby-divider::before,
+.lobby-divider::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid #ecf0f1;
+}
+
+.lobby-join-row {
+  display: flex;
+  gap: 8px;
+}
+
+.lobby-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 2px solid #bdc3c7;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-align: center;
+  text-transform: uppercase;
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+  transition: border-color 0.15s;
+}
+
+.lobby-input:focus {
+  outline: none;
+  border-color: #3498db;
+}
+
+.lobby-input:disabled {
+  background: #f8f9fa;
+  opacity: 0.5;
+}
+
+.lobby-room-info {
+  margin-top: 20px;
+  background: #f0f9ff;
+  border: 1px dashed #3498db;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.lobby-room-info p {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #2c3e50;
+}
+
+.room-id-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.room-id-display {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0.25em;
+  color: #2c3e50;
+  font-family: "Courier New", monospace;
+}
+
+.copy-btn {
+  padding: 5px 12px;
+  border: 1px solid #bdc3c7;
+  border-radius: 5px;
+  background: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  color: #555;
+  transition: all 0.15s;
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+}
+
+.copy-btn:hover {
+  border-color: #3498db;
+  color: #3498db;
+}
+
+.lobby-waiting {
+  font-size: 13px;
+  color: #7f8c8d;
+  margin: 0;
+}
+
+.player-label {
+  margin: 14px 0 0;
+  font-size: 14px;
+  font-weight: 700;
+}

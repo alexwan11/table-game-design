@@ -3,10 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>中国跳棋 - 旋转圆盘 + 抽卡机关</title>
+<title>中国跳棋 - 在线双人对战</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+
+  <!-- 大厅遮罩（全屏覆盖，游戏开始后自动隐藏）-->
+  <div id="lobby-overlay" class="lobby-overlay">
+    <div class="lobby-box">
+      <h2 class="lobby-title">中国跳棋</h2>
+      <p class="lobby-sub">旋转圆盘 · 卡牌抽取 · 在线双人对战</p>
+
+      <div id="lobby-status" class="lobby-status">正在连接服务器…</div>
+
+      <div class="lobby-actions">
+        <button id="btn-create-room" class="lobby-btn primary" disabled>
+          ＋ 创建房间
+        </button>
+
+        <div class="lobby-divider"><span>或者</span></div>
+
+        <div class="lobby-join-row">
+          <input id="room-id-input" class="lobby-input"
+                 placeholder="输入6位房间号" maxlength="6" disabled>
+          <button id="btn-join-room" class="lobby-btn" disabled>加入</button>
+        </div>
+      </div>
+
+      <!-- 房间创建后显示 -->
+      <div id="lobby-room-info" class="lobby-room-info hidden">
+        <p>把房间号发给对方：</p>
+        <div class="room-id-row">
+          <span id="room-id-display" class="room-id-display"></span>
+          <button id="btn-copy-room" class="copy-btn">复制</button>
+        </div>
+        <p class="lobby-waiting">等待对方加入…</p>
+      </div>
+
+      <p id="player-label" class="player-label"></p>
+    </div>
+  </div>
+
+  <!-- 游戏主界面（与原版完全一致，不改动）-->
   <div class="main-frame">
     <div class="left-frame">
       <canvas id="board-canvas" width="600" height="700"></canvas>
@@ -36,7 +74,7 @@
       </div>
 
       <div class="dir-row">
-        <label><input type="radio" name="dir" id="dir-cw" value="cw"> 顺时针 ↻</label>
+        <label><input type="radio" name="dir" id="dir-cw"  value="cw">  顺时针 ↻</label>
         <label><input type="radio" name="dir" id="dir-ccw" value="ccw" checked> 逆时针 ↺</label>
       </div>
 
@@ -53,7 +91,8 @@
         （仍可正常走棋/跳跃）。转圆盘会带动盘内所有同心环上的棋子（含对方棋子）整体一起转动，圆心棋子不动。
       </p>
       <p class="tip">
-        版本仍在更新中...
+        设计说明：方向(顺时针/逆时针)始终可自由选择，所以 <b>60°与300°</b>、<b>120°与240°</b>
+        其实是完全等价的两种说法。本版本只保留三种互不重复的卡牌：<b>60° / 120° / 180°</b>。
       </p>
     </div>
   </div>
