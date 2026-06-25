@@ -95,7 +95,7 @@
      ===================================================== */
   function connectWS() {
     const proto = location.protocol === "https:" ? "wss" : "ws";
-    ws = new WebSocket(`${proto}://${location.host}`);
+    ws = new WebSocket(`${proto}://${location.host}/ws`);
 
     ws.onopen = () => {
       els.lobbyStatus.textContent = "✅ 已连接，请创建或加入房间";
