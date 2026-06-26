@@ -61,7 +61,7 @@
           <span id="room-id-display" class="room-id-display"></span>
           <button id="btn-copy-room" class="copy-btn">复制</button>
         </div>
-        <p class="lobby-waiting">等待对方加入…</p>
+        <p id="lobby-waiting-text" class="lobby-waiting">等待对方加入…</p>
       </div>
 
       <p id="player-label" class="player-label"></p>
@@ -130,6 +130,10 @@
     const u = localStorage.getItem('cc_user');
     const el = document.getElementById('bar-user');
     if (el) el.textContent = u ? ('👤 ' + u) : '游客模式';
+    // 根据 ?players= 参数更新等待文字
+    const pc = Number(new URLSearchParams(location.search).get('players')) || 2;
+    const wt = document.getElementById('lobby-waiting-text');
+    if (wt && pc === 4) wt.textContent = '等待另外 3 名玩家加入…';
   </script>
 </body>
 </html>
