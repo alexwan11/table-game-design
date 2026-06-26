@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>登录 / 注册 - 中国跳棋</title>
+<link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="index.html" class="nav-logo">中国跳棋</a>
+    <div class="nav-links"></div>
+  </nav>
+
+  <main class="auth-page">
+    <div class="auth-card">
+
+      <div class="auth-tabs">
+        <div class="auth-tab active" id="tab-login"    onclick="switchTab('login')">登录</div>
+        <div class="auth-tab"       id="tab-register"  onclick="switchTab('register')">注册</div>
+      </div>
+
+      <div class="auth-body">
+
+        <!-- 登录表单 -->
+        <div id="panel-login">
+          <div class="form-group">
+            <label class="form-label">用户名</label>
+            <input class="form-input" id="login-user" type="text" placeholder="输入用户名" autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label class="form-label">密码</label>
+            <input class="form-input" id="login-pass" type="password" placeholder="输入密码" autocomplete="current-password">
+          </div>
+          <div class="form-error" id="login-error"></div>
+          <button class="btn btn-primary auth-submit" onclick="doLogin()">登录</button>
+
+          <div class="auth-divider">或者</div>
+          <button class="btn btn-ghost guest-btn" onclick="guestPlay()">以游客身份游玩</button>
+        </div>
+
+        <!-- 注册表单 -->
+        <div id="panel-register" style="display:none">
+          <div class="form-group">
+            <label class="form-label">用户名</label>
+            <input class="form-input" id="reg-user" type="text" placeholder="设置用户名（2–16位）" autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label class="form-label">密码</label>
+            <input class="form-input" id="reg-pass" type="password" placeholder="设置密码（至少6位）" autocomplete="new-password">
+          </div>
+          <div class="form-group">
+            <label class="form-label">确认密码</label>
+            <input class="form-input" id="reg-pass2" type="password" placeholder="再次输入密码" autocomplete="new-password">
+          </div>
+          <div class="form-error" id="reg-error"></div>
+          <button class="btn btn-primary auth-submit" onclick="doRegister()">注册并登录</button>
+
+          <div class="auth-divider">或者</div>
+          <button class="btn btn-ghost guest-btn" onclick="guestPlay()">以游客身份游玩</button>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+<script>
+  // 读 URL 参数决定默认标签
+  const params = new URLSearchParams(location.search);
+  if (params.get('tab') === 'register') switchTab('register');
+
+  function switchTab(tab) {
+    document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+    document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+    document.getElementById('panel-login').style.display    = tab === 'login'    ? '' : 'none';
+    document.getElementById('panel-register').style.display = tab === 'register' ? '' : 'none';
+  }
+
+  /* ── 简单 localStorage 存储（无后端，仅演示） ── */
+  function getUsers() {
+    return JSON.parse(localStorage.getItem('cc_users') || '{}');
+  }
+  function saveUsers(u) {
+    localStorage.setItem('cc_users', JSON.stringify(u));
+  }
+  function simpleHash(s) {
+    // 简单哈希，仅作演示，不用于真实安全场景
+    let h = 5381;
+    for (let i = 0; i < s.length; i++) h = ((h << 5) + h) ^ s.charCodeAt(i);
+    return (h >>> 0).toString(16);
+  }
+
+  function doLogin() {
+    const user = document.getElementById('login-user').value.trim();
+    const pass = document.getElementById('login-pass').value;
+    const err  = document.getElementById('login-error');
+    if (!user || !pass) { err.textContent = '请填写用户名和密码'; return; }
+    const users = getUsers();
+    if (!users[user]) { err.textContent = '用户名不存在'; return; }
+    if (users[user] !== simpleHash(pass)) { err.textContent = '密码错误'; return; }
+    err.textContent = '';
+    localStorage.setItem('cc_user', user);
+    location.href = 'select.html';
+  }
+
+  function doRegister() {
+    const user  = document.getElementById('reg-user').value.trim();
+    const pass  = document.getElementById('reg-pass').value;
+    const pass2 = document.getElementById('reg-pass2').value;
+    const err   = document.getElementById('reg-error');
+    if (!user || user.length < 2 || user.length > 16)
+      { err.textContent = '用户名需为 2–16 位'; return; }
+    if (!pass || pass.length < 6)
+      { err.textContent = '密码至少 6 位'; return; }
+    if (pass !== pass2)
+      { err.textContent = '两次密码不一致'; return; }
+    const users = getUsers();
+    if (users[user]) { err.textContent = '用户名已存在'; return; }
+    users[user] = simpleHash(pass);
+    saveUsers(users);
+    err.textContent = '';
+    localStorage.setItem('cc_user', user);
+    location.href = 'select.html';
+  }
+
+  function guestPlay() {
+    localStorage.removeItem('cc_user');
+    location.href = 'select.html';
+  }
+
+  // 如果已登录直接跳转
+  if (localStorage.getItem('cc_user')) location.href = 'select.html';
+</script>
+</body>
+</html>

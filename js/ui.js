@@ -95,7 +95,7 @@
      ===================================================== */
   function connectWS() {
     const proto = location.protocol === "https:" ? "wss" : "ws";
-    ws = new WebSocket(`${proto}://${location.host}/ws`);
+    ws = new WebSocket(`${proto}://${location.host}`);
 
     ws.onopen = () => {
       els.lobbyStatus.textContent = "✅ 已连接，请创建或加入房间";
@@ -218,6 +218,7 @@
     state.draftCount     = msg.draftCount;
     state.gameOver       = msg.gameOver;
     state.inJumpChain    = msg.inJumpChain;
+    state.myPlayerNum    = myPlayerNum;   // ★ 供 render.js 判断谁的手牌
     state.currentJumper  = msg.currentJumper;
     state.availableJumps = msg.availableJumps || [];
     state.lastDrawnCard  = msg.lastDrawnCard;
@@ -238,23 +239,34 @@
 
     // ── 抽卡动画（双方都要看到）──
     if (lastAction && lastAction.type === "card_drawn") {
+      const isMyDraw = lastAction.player === myPlayerNum;
       state.draftAnimating = true;
       state.draftReveal    = false;
       redraw();
-      updateStatus("抽取中…");
+      updateStatus(isMyDraw
+        ? "抽取中…"
+        : `${B.PLAYER_NAME[lastAction.player]} 正在抽取卡牌…`);
 
-      setTimeout(() => {
-        state.draftReveal = true;
-        redraw();
-        updateStatus(`获得 ${lastAction.card.rarity}（${lastAction.card.degree}°）卡牌！`);
-
+      if (isMyDraw) {
+        // 己方抽卡 → 显示翻牌揭示动画
+        setTimeout(() => {
+          state.draftReveal = true;
+          redraw();
+          updateStatus(`获得 ${lastAction.card.rarity}（${lastAction.card.degree}°）卡牌！`);
+          setTimeout(() => {
+            state.draftAnimating = false;
+            state.draftReveal    = false;
+            fullRefresh();
+          }, 1000);
+        }, 300);
+      } else {
+        // 对手抽卡 → 只显示"抽取中"动画，不翻牌，不暴露内容
         setTimeout(() => {
           state.draftAnimating = false;
-          state.draftReveal    = false;
           fullRefresh();
-        }, 1000);
-      }, 300);
-      return; // 动画期间不做其余刷新
+        }, 800);
+      }
+      return;
     }
 
     fullRefresh();

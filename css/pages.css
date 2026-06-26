@@ -1,0 +1,373 @@
+/* =====================================================
+   pages.css  —  首页 / 登录注册 / 游戏选择 公用样式
+   ===================================================== */
+
+:root {
+  --bg:        #0f1923;
+  --bg-card:   #1a2a3a;
+  --bg-input:  #0d1f2d;
+  --border:    rgba(255,255,255,0.08);
+  --border-hl: rgba(255,255,255,0.22);
+  --gold:      #e8b86d;
+  --gold-soft: #f5d49a;
+  --p1:        #e74c3c;
+  --p2:        #3498db;
+  --text:      #edf2f7;
+  --text-soft: #7a909e;
+  --radius:    14px;
+  --radius-sm: 8px;
+  --shadow:    0 20px 60px rgba(0,0,0,0.5);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+  min-height: 100vh;
+}
+
+a { text-decoration: none; color: inherit; }
+
+/* ── 通用按钮 ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 11px 22px;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  transition: filter .15s, transform .1s, opacity .15s;
+}
+.btn:hover:not(:disabled)  { filter: brightness(1.12); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled              { opacity: .4; cursor: not-allowed; }
+
+.btn-primary { background: var(--gold);   color: #1a1a1a; }
+.btn-ghost   { background: transparent;  color: var(--text); border: 1.5px solid var(--border-hl); }
+.btn-ghost:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); filter: none; }
+
+/* ── 通用导航栏 ── */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 40px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  z-index: 10;
+}
+.nav-logo {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--gold);
+  letter-spacing: .08em;
+}
+.nav-links { display: flex; align-items: center; gap: 12px; }
+.nav-user  { font-size: 14px; color: var(--text-soft); }
+.nav-user span { color: var(--gold); font-weight: 700; }
+
+/* =====================================================
+   首页 (index.html)
+   ===================================================== */
+.home-page { overflow-x: hidden; }
+
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 80px;
+  padding: 80px 40px 60px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.hero-content { max-width: 420px; }
+
+.hero-eyebrow {
+  font-size: 12px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 14px;
+}
+
+.hero-title {
+  font-size: clamp(44px, 7vw, 68px);
+  font-weight: 900;
+  line-height: 1.1;
+  color: #fff;
+  letter-spacing: .04em;
+}
+
+.hero-title .accent { color: var(--gold); }
+
+.hero-desc {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text-soft);
+  margin: 16px 0 32px;
+}
+
+.hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+
+.hero-btns .btn { padding: 14px 28px; font-size: 15px; border-radius: 10px; }
+
+/* 六角形装饰 */
+.hex-visual {
+  flex-shrink: 0;
+  width: 320px;
+  height: 320px;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  align-items: center;
+  justify-items: center;
+}
+
+.hex {
+  width: 48px;
+  height: 48px;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  transition: background .3s;
+}
+
+.hex.h-red  { background: rgba(231,76,60,.35);  border-color: var(--p1); }
+.hex.h-blue { background: rgba(52,152,219,.35); border-color: var(--p2); }
+.hex.h-gold { background: rgba(232,184,109,.2); border-color: var(--gold); }
+
+/* 特性卡片 */
+.features {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 0 40px 80px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.feat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  width: 260px;
+  transition: border-color .2s, transform .2s;
+}
+.feat-card:hover { border-color: var(--gold); transform: translateY(-4px); }
+.feat-icon { font-size: 32px; margin-bottom: 12px; }
+.feat-card h3 { font-size: 16px; color: var(--gold-soft); margin-bottom: 8px; }
+.feat-card p  { font-size: 13px; line-height: 1.6; color: var(--text-soft); }
+
+/* =====================================================
+   登录 / 注册 (auth.html)
+   ===================================================== */
+.auth-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 74px);
+  padding: 40px 20px;
+}
+
+.auth-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 100%;
+  max-width: 400px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.auth-tabs {
+  display: flex;
+}
+.auth-tab {
+  flex: 1;
+  padding: 16px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-soft);
+  cursor: pointer;
+  border-bottom: 2px solid var(--border);
+  transition: color .15s, border-color .15s;
+}
+.auth-tab.active {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+.auth-body { padding: 28px 32px 32px; }
+
+.form-group  { margin-bottom: 18px; }
+.form-label  { display: block; font-size: 13px; color: var(--text-soft); margin-bottom: 7px; }
+.form-input  {
+  width: 100%;
+  padding: 11px 14px;
+  background: var(--bg-input);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color .15s;
+}
+.form-input:focus { outline: none; border-color: var(--gold); }
+
+.form-error {
+  font-size: 12px;
+  color: var(--p1);
+  margin-top: 6px;
+  min-height: 18px;
+}
+
+.auth-submit {
+  width: 100%;
+  padding: 13px;
+  font-size: 15px;
+  border-radius: var(--radius-sm);
+  margin-top: 4px;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  color: var(--text-soft);
+  font-size: 12px;
+}
+.auth-divider::before,
+.auth-divider::after { content: ""; flex: 1; border-top: 1px solid var(--border); }
+
+.guest-btn {
+  width: 100%;
+  padding: 11px;
+  font-size: 14px;
+  border-radius: var(--radius-sm);
+}
+
+/* =====================================================
+   游戏选择 (select.html)
+   ===================================================== */
+.select-page {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+
+.select-page h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--gold-soft);
+  margin-bottom: 6px;
+}
+.select-page .page-sub {
+  font-size: 14px;
+  color: var(--text-soft);
+  margin-bottom: 40px;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  margin-bottom: 14px;
+}
+
+/* 模式选项 */
+.mode-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 36px;
+}
+
+.mode-card {
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  position: relative;
+  text-align: left;
+  user-select: none;
+}
+.mode-card:hover:not(.coming-soon) { border-color: var(--border-hl); }
+.mode-card.selected { border-color: var(--gold); background: rgba(232,184,109,.07); }
+.mode-card.coming-soon { opacity: .5; cursor: not-allowed; }
+
+.mode-icon  { font-size: 28px; margin-bottom: 10px; }
+.mode-title { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.mode-desc  { font-size: 12px; color: var(--text-soft); line-height: 1.5; }
+
+.badge-soon {
+  position: absolute;
+  top: 12px; right: 12px;
+  background: rgba(255,255,255,.1);
+  color: var(--text-soft);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  padding: 3px 8px;
+  border-radius: 20px;
+}
+
+/* 人数选项 */
+.players-grid {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+.player-chip {
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 22px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  text-align: center;
+  min-width: 90px;
+  position: relative;
+  user-select: none;
+}
+.player-chip:hover:not(.coming-soon) { border-color: var(--border-hl); }
+.player-chip.selected { border-color: var(--gold); background: rgba(232,184,109,.07); }
+.player-chip.coming-soon { opacity: .5; cursor: not-allowed; }
+
+.chip-num  { font-size: 24px; font-weight: 800; color: var(--text); line-height: 1; }
+.chip-sub  { font-size: 11px; color: var(--text-soft); margin-top: 4px; }
+
+.start-btn {
+  padding: 15px 40px;
+  font-size: 16px;
+  border-radius: 10px;
+}
+
+/* =====================================================
+   响应式
+   ===================================================== */
+@media (max-width: 700px) {
+  .hero          { flex-direction: column; gap: 40px; padding: 48px 20px 40px; }
+  .hex-visual    { display: none; }
+  .features      { padding: 0 20px 48px; }
+  .navbar        { padding: 16px 20px; }
+  .mode-grid     { grid-template-columns: 1fr; }
+}
