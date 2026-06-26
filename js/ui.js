@@ -140,18 +140,24 @@
 
       case "joined":
         myPlayerNum = msg.playerNum;
-        // 显示身份标签
-        els.playerLabel.textContent = `你是：${B.PLAYER_NAME[msg.playerNum]}`;
+        els.playerLabel.textContent = `你是 ${B.PLAYER_NAME[msg.playerNum]}`;
         els.playerLabel.style.color = B.PLAYER_COLOR[msg.playerNum];
-        // 玩家1：显示房间号等待界面
         if (msg.playerNum === 1) {
           els.roomIdDisplay.textContent = msg.roomId;
           els.lobbyRoomInfo.classList.remove("hidden");
         }
+        if (msg.maxPlayers > 2) {
+          els.lobbyStatus.textContent = `已加入，等待更多玩家（1/${msg.maxPlayers}）…`;
+        }
         break;
 
       case "waiting":
-        els.lobbyStatus.textContent = "⏳ 等待对方加入，把房间号分享给对方…";
+        if (msg.maxPlayers > 2) {
+          els.lobbyStatus.textContent =
+            `⏳ 已有 ${msg.playerCount}/${msg.maxPlayers} 名玩家，等待更多人加入…`;
+        } else {
+          els.lobbyStatus.textContent = "⏳ 等待对方加入，把房间号分享给对方…";
+        }
         break;
 
       case "game_state":
@@ -181,7 +187,8 @@
     els.btnCreate.disabled = true;
     els.btnJoin.disabled   = true;
     els.roomInput.disabled = true;
-    send({ type: "create_room" });
+    const playerCount = Number(new URLSearchParams(location.search).get('players')) || 2;
+    send({ type: "create_room", playerCount });
   }
 
   function joinRoom() {
@@ -217,8 +224,11 @@
     state.playerHands    = msg.playerHands;
     state.draftCount     = msg.draftCount;
     state.gameOver       = msg.gameOver;
-    state.inJumpChain    = msg.inJumpChain;
-    state.myPlayerNum    = myPlayerNum;   // ★ 供 render.js 判断谁的手牌
+    state.inJumpChain      = msg.inJumpChain;
+    state.playerCount      = msg.playerCount || 2;
+    state.handSize         = msg.handSize || 5;
+    state.totalDraftDraws  = msg.totalDraftDraws || 10;
+    state.myPlayerNum      = myPlayerNum;   // ★ 供 render.js 判断谁的手牌
     state.currentJumper  = msg.currentJumper;
     state.availableJumps = msg.availableJumps || [];
     state.lastDrawnCard  = msg.lastDrawnCard;
@@ -504,10 +514,15 @@
   }
 
   function updateHandCounts() {
-    const r = (state.playerHands[1] || []).length;
-    const b = (state.playerHands[2] || []).length;
-    els.handCount.textContent =
-      `🔴 红方卡牌 ${r}/${C.HAND_SIZE}　　🔵 蓝方卡牌 ${b}/${C.HAND_SIZE}`;
+    const pc     = state.playerCount || 2;
+    const hs     = state.handSize || C.HAND_SIZE;
+    const emojis = ['🔴','🔵','🟢','🟠','🟣','🩵'];
+    const parts  = [];
+    for (let p = 1; p <= pc; p++) {
+      const n = (state.playerHands[p] || []).length;
+      parts.push(`${emojis[p-1]} ${B.PLAYER_NAME[p]} ${n}/${hs}`);
+    }
+    els.handCount.textContent = parts.join('　');
   }
 
   function updateStatus(extra) {
@@ -516,8 +531,9 @@
     if (state.phase === "draft") {
       const p    = G.currentDraftPlayer(state);
       const isMe = p === myPlayerNum;
+      const hs   = state.handSize || C.HAND_SIZE;
       let msg = `🎴 抽卡阶段：${B.PLAYER_NAME[p]} 抽卡中 ` +
-                `(${(state.playerHands[p] || []).length}/${C.HAND_SIZE})`;
+                `(${(state.playerHands[p] || []).length}/${hs})`;
       msg += isMe ? "　请点击棋盘中央卡背抽取" : "　等待对方抽卡…";
       if (extra) msg += "　" + extra;
       els.status.textContent = msg;

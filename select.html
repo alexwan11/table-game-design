@@ -45,14 +45,14 @@
         <div class="chip-sub">人对战</div>
       </div>
 
-      <div class="player-chip coming-soon" data-players="4">
+      <div class="player-chip" data-players="4" onclick="selectPlayers(4)">
         <div class="chip-num">4</div>
-        <div class="chip-sub">即将推出</div>
+        <div class="chip-sub">人对战</div>
       </div>
 
-      <div class="player-chip coming-soon" data-players="6">
+      <div class="player-chip" data-players="6" onclick="selectPlayers(6)">
         <div class="chip-num">6</div>
-        <div class="chip-sub">即将推出</div>
+        <div class="chip-sub">人对战</div>
       </div>
 
     </div>
@@ -101,21 +101,21 @@
 
   function updateHint() {
     const hint = document.getElementById('select-hint');
-    if (chosenMode === 'online' && chosenPlayers === 2) {
-      hint.textContent = '✅ 已选：在线对战 · 2人';
+    hint.style.color = 'var(--text-soft)';
+    if (chosenMode === 'ai') {
+      hint.textContent = '⚠ AI对战即将推出';
     } else {
-      hint.textContent = '⚠ 当前仅支持「在线对战 · 2人」模式';
+      hint.textContent = `✅ 已选：在线对战 · ${chosenPlayers}人`;
     }
   }
 
   function startGame() {
-    if (chosenMode !== 'online' || chosenPlayers !== 2) {
-      document.getElementById('select-hint').textContent =
-        '⚠ 该模式即将推出，敬请期待！';
+    if (chosenMode !== 'online') {
+      document.getElementById('select-hint').textContent = '⚠ AI对战即将推出，敬请期待！';
       document.getElementById('select-hint').style.color = 'var(--p1)';
       return;
     }
-    location.href = 'game.html';
+    location.href = `game.html?players=${chosenPlayers}`;
   }
 
   updateHint();

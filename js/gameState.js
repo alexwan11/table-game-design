@@ -9,11 +9,33 @@
   const B = window.CCG.board;
   const C = window.CCG.cards;
 
-  function resetState(state) {
+  function resetState(state, playerCount) {
+    playerCount = playerCount || state.playerCount || 2;
+    state.playerCount = playerCount;
+
+    // 每人手牌数：2人=5张，4人=3张
+    const handSize = playerCount === 6 ? 2 : (playerCount === 4 ? 3 : 5);
+    state.handSize = handSize;
+    state.totalDraftDraws = handSize * playerCount;
+
     state.boardState = {};
     B.BOARD_KEYS.forEach((k) => (state.boardState[k] = 0));
-    B.TOP_REGION_SET.forEach((k) => (state.boardState[k] = 1));
-    B.BOTTOM_REGION_SET.forEach((k) => (state.boardState[k] = 2));
+
+    if (playerCount === 6) {
+      // 6人模式：6个臂全部使用
+      [1, 2, 3, 4, 5, 6].forEach((p) =>
+        B.P6_STARTS[p].forEach((k) => (state.boardState[k] = p))
+      );
+    } else if (playerCount === 4) {
+      // 4人模式：4个臂
+      [1, 2, 3, 4].forEach((p) =>
+        B.P4_STARTS[p].forEach((k) => (state.boardState[k] = p))
+      );
+    } else {
+      // 2人模式
+      B.TOP_REGION_SET.forEach((k) => (state.boardState[k] = 1));
+      B.BOTTOM_REGION_SET.forEach((k) => (state.boardState[k] = 2));
+    }
 
     state.currentPlayer = 1;
     state.selected = null;
@@ -23,8 +45,9 @@
     state.rotatingCircle = null;
 
     // ---- 抽卡阶段(Gacha) ----
-    state.phase = "draft"; // 'draft' -> 'play'
-    state.playerHands = { 1: [], 2: [] };
+    state.phase = "draft";
+    state.playerHands = {};
+    for (let i = 1; i <= playerCount; i++) state.playerHands[i] = [];
     state.draftCount = 0;
     state.draftAnimating = false;
     state.draftReveal = false;
@@ -35,12 +58,13 @@
     return state;
   }
 
-  function createInitialState() {
-    return resetState({});
+  function createInitialState(playerCount) {
+    return resetState({}, playerCount || 2);
   }
 
   function currentDraftPlayer(state) {
-    return state.draftCount % 2 === 0 ? 1 : 2;
+    const pc = state.playerCount || 2;
+    return (state.draftCount % pc) + 1;
   }
 
   function firstMoves(state, srcKey) {
@@ -110,10 +134,24 @@
   }
 
   function checkWin(state, player) {
-    const target = player === 1 ? B.BOTTOM_REGION_SET : B.TOP_REGION_SET;
+    let target;
+    const pc = state.playerCount || 2;
+    if (pc === 6) {
+      target = B.P6_GOALS[player];
+    } else if (pc === 4) {
+      target = B.P4_GOALS[player];
+    } else {
+      target = player === 1 ? B.BOTTOM_REGION_SET : B.TOP_REGION_SET;
+    }
     const cells = B.BOARD_KEYS.filter((k) => state.boardState[k] === player);
     if (cells.length === 10 && cells.every((k) => target.has(k))) return player;
     return null;
+  }
+
+  /** 下一个玩家编号（支持 2/4 人循环）*/
+  function nextTurnPlayer(state) {
+    const pc = state.playerCount || 2;
+    return (state.currentPlayer % pc) + 1;
   }
 
   /** 抽之前完全随机、未知 — 纯数据层面的一次抽卡，不含动画/计时。 */
@@ -129,7 +167,7 @@
 
   window.CCG = window.CCG || {};
   window.CCG.game = {
-    createInitialState, resetState, currentDraftPlayer,
+    createInitialState, resetState, currentDraftPlayer, nextTurnPlayer,
     firstMoves, continueJumps, movePiece, rotateCircle,
     checkWin, draftDrawCard,
   };

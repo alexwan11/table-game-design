@@ -80,17 +80,17 @@ const httpServer = http.createServer((req, res) => {
 const rooms = new Map();   // roomId → Room
 
 class Room {
-  constructor(id) {
-    this.id      = id;
-    this.sockets = new Map();   // playerNum(1|2) → ws
-    this.state   = G.createInitialState();
-    // 这两个字段 gameState.js 里没有，在这里手动追加
+  constructor(id, maxPlayers) {
+    this.id         = id;
+    this.maxPlayers = maxPlayers || 2;
+    this.sockets    = new Map();   // playerNum(1..maxPlayers) → ws
+    this.state      = G.createInitialState(this.maxPlayers);
     this.state.currentJumper  = null;
     this.state.availableJumps = [];
   }
 
   get playerCount() { return this.sockets.size; }
-  isFull()          { return this.sockets.size >= 2; }
+  isFull()          { return this.sockets.size >= this.maxPlayers; }
 
   broadcast(msg) {
     const data = JSON.stringify(msg);
@@ -112,6 +112,9 @@ class Room {
     return {
       type          : 'game_state',
       boardState    : s.boardState,
+      playerCount   : s.playerCount || 2,
+      handSize      : s.handSize || 5,
+      totalDraftDraws: s.totalDraftDraws || 10,
       currentPlayer : s.currentPlayer,
       phase         : s.phase,
       playerHands   : s.playerHands,
@@ -157,14 +160,15 @@ wss.on('connection', (ws) => {
       /* ── 大厅 ── */
       case 'create_room': {
         if (ws._roomId) return;
+        const playerCount = [2, 4, 6].includes(msg.playerCount) ? msg.playerCount : 2;
         const id   = newRoomId();
-        const room = new Room(id);
+        const room = new Room(id, playerCount);
         rooms.set(id, room);
         room.sockets.set(1, ws);
         ws._roomId    = id;
         ws._playerNum = 1;
-        ws.send(JSON.stringify({ type: 'joined', roomId: id, playerNum: 1 }));
-        ws.send(JSON.stringify({ type: 'waiting' }));
+        ws.send(JSON.stringify({ type: 'joined', roomId: id, playerNum: 1, maxPlayers: playerCount }));
+        ws.send(JSON.stringify({ type: 'waiting', maxPlayers: playerCount, playerCount: 1 }));
         break;
       }
 
@@ -178,12 +182,23 @@ wss.on('connection', (ws) => {
         if (target.isFull()) {
           ws.send(JSON.stringify({ type: 'error', message: '房间已满（已有两名玩家）' })); return;
         }
-        target.sockets.set(2, ws);
+        const playerNum = target.playerCount + 1;
+        target.sockets.set(playerNum, ws);
         ws._roomId    = id;
-        ws._playerNum = 2;
-        ws.send(JSON.stringify({ type: 'joined', roomId: id, playerNum: 2 }));
-        // 双方都在 → 广播初始抽卡阶段状态
-        target.broadcast(target.snapshot({ type: 'game_start' }));
+        ws._playerNum = playerNum;
+        ws.send(JSON.stringify({ type: 'joined', roomId: id, playerNum, maxPlayers: target.maxPlayers }));
+
+        if (target.isFull()) {
+          // 房间满员 → 开始游戏
+          target.broadcast(target.snapshot({ type: 'game_start' }));
+        } else {
+          // 还未满员 → 广播当前人数
+          target.broadcast({
+            type: 'waiting',
+            maxPlayers: target.maxPlayers,
+            playerCount: target.playerCount,
+          });
+        }
         break;
       }
 
@@ -196,7 +211,7 @@ wss.on('connection', (ws) => {
         const card = G.draftDrawCard(room.state);
         if (!card) return;
 
-        const done = room.state.draftCount >= C.TOTAL_DRAFT_DRAWS;
+        const done = room.state.draftCount >= (room.state.totalDraftDraws || C.TOTAL_DRAFT_DRAWS);
         if (done) {
           room.state.phase         = 'play';
           room.state.currentPlayer = 1;
@@ -225,7 +240,7 @@ wss.on('connection', (ws) => {
             G.movePiece(s, src, dst);
             const w = G.checkWin(s, s.currentPlayer);
             if (w) s.gameOver = true;
-            else   s.currentPlayer = s.currentPlayer === 1 ? 2 : 1;
+            else   s.currentPlayer = G.nextTurnPlayer(s);
             room.broadcast(room.snapshot({ type: 'move', src, dst }));
 
           } else if (jumps.includes(dst)) {
@@ -241,7 +256,7 @@ wss.on('connection', (ws) => {
               s.inJumpChain   = false;
               s.currentJumper = null;
               if (w) s.gameOver = true;
-              else   s.currentPlayer = s.currentPlayer === 1 ? 2 : 1;
+              else   s.currentPlayer = G.nextTurnPlayer(s);
             }
             room.broadcast(room.snapshot({ type: 'move', src, dst }));
 
@@ -262,7 +277,7 @@ wss.on('connection', (ws) => {
           s.inJumpChain   = false;
           s.currentJumper = null;
           if (w) s.gameOver = true;
-          else   s.currentPlayer = s.currentPlayer === 1 ? 2 : 1;
+          else   s.currentPlayer = G.nextTurnPlayer(s);
         }
         room.broadcast(room.snapshot({ type: 'move', src, dst }));
         break;
@@ -279,7 +294,7 @@ wss.on('connection', (ws) => {
         s.currentJumper = null;
         s.availableJumps = [];
         if (w) s.gameOver = true;
-        else   s.currentPlayer = s.currentPlayer === 1 ? 2 : 1;
+        else   s.currentPlayer = G.nextTurnPlayer(s);
         room.broadcast(room.snapshot({ type: 'end_jump' }));
         break;
       }
@@ -299,7 +314,9 @@ wss.on('connection', (ws) => {
         const card = hand.splice(cardIndex, 1)[0];
         G.rotateCircle(room.state, cid, direction, card.steps);
 
-        const w = G.checkWin(room.state, 1) || G.checkWin(room.state, 2);
+        const pc = room.state.playerCount || 2;
+        let w = null;
+        for (let p = 1; p <= pc; p++) { w = G.checkWin(room.state, p); if (w) break; }
         if (w) room.state.gameOver = true;
         else   room.state.currentPlayer = room.state.currentPlayer === 1 ? 2 : 1;
         room.broadcast(room.snapshot({ type: 'disk_rotated', cid, direction, steps: card.steps }));
@@ -309,7 +326,7 @@ wss.on('connection', (ws) => {
       /* ── 重置 ── */
       case 'reset': {
         if (!room) return;
-        G.resetState(room.state);
+        G.resetState(room.state, room.maxPlayers);  // 保留原始人数
         room.state.currentJumper  = null;
         room.state.availableJumps = [];
         room.broadcast(room.snapshot({ type: 'reset' }));

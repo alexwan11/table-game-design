@@ -143,16 +143,42 @@
     "A,B,C": "#fff2a8",
   };
 
-  // -------------------- 颜色 / 名称配置 --------------------
-  const PLAYER_NAME = { 1: "红方", 2: "蓝方" };
-  const PLAYER_COLOR = { 1: "#e74c3c", 2: "#3498db" };
-  const PLAYER_OUTLINE = { 1: "#922b1f", 2: "#1f618d" };
+  // -------------------- 颜色 / 名称配置（支持 2/4 人）--------------------
+  const PLAYER_NAME    = { 1: "红方", 2: "蓝方", 3: "绿方", 4: "橙方", 5: "紫方", 6: "青方" };
+  const PLAYER_COLOR   = { 1: "#e74c3c", 2: "#3498db", 3: "#27ae60", 4: "#f39c12", 5: "#9b59b6", 6: "#1abc9c" };
+  const PLAYER_OUTLINE = { 1: "#922b1f", 2: "#1f618d", 3: "#1a6e3f", 4: "#b7770d", 5: "#6c3483", 6: "#148f77" };
+
+  // -------------------- 4人模式：6个臂区域 --------------------
+  // 布局：P1=顶, P2=右上, P3=底, P4=左下（两两相对）
+  // 剩余两臂（右下/左上）为空白通道
+  const ARM = {
+    top:          new Set(BOARD.filter(([x,y,z]) => z<=-(R+1) && x<=R && y<=R   ).map(key)),
+    top_right:    new Set(BOARD.filter(([x,y,z]) => x>=(R+1)  && y>=-R && z>=-R ).map(key)),
+    bottom_right: new Set(BOARD.filter(([x,y,z]) => y<=-(R+1) && x<=R && z<=R   ).map(key)),
+    bottom:       new Set(BOARD.filter(([x,y,z]) => z>=(R+1)  && x>=-R && y>=-R ).map(key)),
+    bottom_left:  new Set(BOARD.filter(([x,y,z]) => x<=-(R+1) && y<=R && z<=R   ).map(key)),
+    top_left:     new Set(BOARD.filter(([x,y,z]) => y>=(R+1)  && x>=-R && z>=-R ).map(key)),
+  };
+  // 4人起始位置 & 目标位置
+  const P4_STARTS = { 1: ARM.top, 2: ARM.top_right, 3: ARM.bottom, 4: ARM.bottom_left };
+  const P4_GOALS  = { 1: ARM.bottom, 2: ARM.bottom_left, 3: ARM.top, 4: ARM.top_right };
+
+  // 6人模式：全部6个臂，顶点顺序P1→P2→P3顺时针，对面分别是P4→P5→P6
+  const P6_STARTS = {
+    1: ARM.top,          2: ARM.top_right,   3: ARM.bottom_right,
+    4: ARM.bottom,       5: ARM.bottom_left, 6: ARM.top_left,
+  };
+  const P6_GOALS = {
+    1: ARM.bottom,       2: ARM.bottom_left, 3: ARM.top_left,
+    4: ARM.top,          5: ARM.top_right,   6: ARM.bottom_right,
+  };
 
   window.CCG = window.CCG || {};
   window.CCG.board = {
     R, DIRS, key, parseKey,
     BOARD, BOARD_KEYS, BOARD_SET,
     TOP_REGION_SET, BOTTOM_REGION_SET,
+    ARM, P4_STARTS, P4_GOALS, P6_STARTS, P6_GOALS,
     SIZE, HOLE_R, CLICK_R, CANVAS_W, CANVAS_H,
     cellToPixel, PIXEL,
     DISK_R, CIRCLE_CENTERS, CIRCLE_COLOR, CIRCLE_LABEL,
