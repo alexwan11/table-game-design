@@ -470,7 +470,7 @@
     const isMyTurn  = state.phase === "play" && !state.gameOver &&
                       state.currentPlayer === myPlayerNum;
     const hand      = state.phase === "play"
-                      ? (state.playerHands[state.currentPlayer] || []) : [];
+                      ? (state.playerHands[myPlayerNum] || []) : [];
     const canRotate = isMyTurn && !state.inJumpChain && hand.length > 0;
 
     Object.entries(els.circleBtns).forEach(([cid, btn]) => {
@@ -495,9 +495,9 @@
       els.cardSelect.innerHTML = '<span class="placeholder">（开局后才能使用卡牌）</span>';
       return;
     }
-    const hand = state.playerHands[state.currentPlayer] || [];
+    const hand = state.playerHands[myPlayerNum] || [];
     if (!hand.length) {
-      els.cardSelect.innerHTML = '<span class="placeholder">（当前玩家无手牌，无法旋转圆盘）</span>';
+      els.cardSelect.innerHTML = '<span class="placeholder">（你已无手牌，无法旋转圆盘）</span>';
       return;
     }
     const active = state.rotatingCircle !== null && state.currentPlayer === myPlayerNum;
@@ -547,7 +547,7 @@
       msg += "（连续跳跃中，可继续跳或点击「结束跳跃」）";
     if (state.rotatingCircle) {
       msg += `（正在配置旋转：${B.CIRCLE_LABEL[state.rotatingCircle]}）`;
-      const hand = state.playerHands[state.currentPlayer] || [];
+      const hand = state.playerHands[myPlayerNum] || [];
       if (state.selectedCardIndex !== null && state.selectedCardIndex < hand.length)
         msg += ` 已选卡牌 ${hand[state.selectedCardIndex].degree}°`;
       else
