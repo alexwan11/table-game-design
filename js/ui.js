@@ -15,8 +15,9 @@
   const Rd = window.CCG.render;
 
   /* ── WebSocket & 身份 ── */
-  let ws          = null;
-  let myPlayerNum = null;   // 1 = 红方, 2 = 蓝方，加入房间后确定
+  let ws              = null;
+  let myPlayerNum     = null;
+  let countdownInterval = null;  // 倒计时刷新句柄   // 1 = 红方, 2 = 蓝方，加入房间后确定
 
   /* ── 游戏状态：服务端权威，客户端保留镜像 ── */
   let state = G.createInitialState();
@@ -204,10 +205,29 @@
   function copyRoomId() {
     const id = els.roomIdDisplay.textContent;
     if (!id) return;
-    navigator.clipboard.writeText(id).then(() => {
+
+    const onSuccess = () => {
       els.btnCopyRoom.textContent = "✅ 已复制";
       setTimeout(() => { els.btnCopyRoom.textContent = "复制"; }, 2000);
-    });
+    };
+
+    // 兜底方案：HTTP 下 navigator.clipboard 不可用，改用 execCommand
+    const fallback = () => {
+      const ta = document.createElement("textarea");
+      ta.value = id;
+      ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;pointer-events:none";
+      document.body.appendChild(ta);
+      ta.focus(); ta.select();
+      try { document.execCommand("copy"); onSuccess(); }
+      catch (e) { alert("复制失败，请手动复制房间号：" + id); }
+      document.body.removeChild(ta);
+    };
+
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(id).then(onSuccess).catch(fallback);
+    } else {
+      fallback();
+    }
   }
 
   /* =====================================================
@@ -228,7 +248,8 @@
     state.playerCount      = msg.playerCount || 2;
     state.handSize         = msg.handSize || 5;
     state.totalDraftDraws  = msg.totalDraftDraws || 10;
-    state.myPlayerNum      = myPlayerNum;   // ★ 供 render.js 判断谁的手牌
+    state.myPlayerNum      = myPlayerNum;
+    state.turnStartTime    = msg.turnStartTime || null;
     state.currentJumper  = msg.currentJumper;
     state.availableJumps = msg.availableJumps || [];
     state.lastDrawnCard  = msg.lastDrawnCard;
@@ -277,6 +298,19 @@
         }, 800);
       }
       return;
+    }
+
+    // 倒计时
+    if (msg.phase === 'play' && !msg.gameOver && msg.turnStartTime) {
+      startCountdown(msg.turnStartTime);
+    } else {
+      stopCountdown();
+    }
+
+    // turn_timeout 超时提示
+    if (lastAction && lastAction.type === 'turn_timeout') {
+      els.status.textContent =
+        `⏰ ${B.PLAYER_NAME[lastAction.timedOutPlayer]} 超时，自动跳过回合！`;
     }
 
     fullRefresh();
@@ -454,6 +488,35 @@
   /* =====================================================
      获胜横幅
      ===================================================== */
+  /* =====================================================
+     倒计时
+     ===================================================== */
+  function startCountdown(turnStartTime) {
+    stopCountdown();
+    updateCountdown(turnStartTime);                 // 立即刷新一次
+    countdownInterval = setInterval(() => updateCountdown(turnStartTime), 500);
+  }
+
+  function stopCountdown() {
+    if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+    const el = document.getElementById('countdown-bar');
+    if (el) { el.textContent = ''; el.className = 'countdown-bar'; }
+  }
+
+  function updateCountdown(turnStartTime) {
+    const el = document.getElementById('countdown-bar');
+    if (!el) return;
+    const elapsed   = Math.floor((Date.now() - turnStartTime) / 1000);
+    const remaining = Math.max(0, 60 - elapsed);
+    const mins = Math.floor(remaining / 60);
+    const secs = remaining % 60;
+    const pad  = (n) => String(n).padStart(2, '0');
+    el.textContent = `⏱ ${pad(mins)}:${pad(secs)}`;
+    el.className   = 'countdown-bar'
+      + (remaining <= 10 ? ' urgent' : remaining <= 30 ? ' warning' : '');
+    if (remaining === 0) stopCountdown();
+  }
+
   function showWinBanner(winner) {
     const isMe = winner === myPlayerNum;
     els.winBanner.textContent =

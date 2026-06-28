@@ -81,12 +81,39 @@ const rooms = new Map();   // roomId → Room
 
 class Room {
   constructor(id, maxPlayers) {
-    this.id         = id;
-    this.maxPlayers = maxPlayers || 2;
-    this.sockets    = new Map();   // playerNum(1..maxPlayers) → ws
-    this.state      = G.createInitialState(this.maxPlayers);
+    this.id           = id;
+    this.maxPlayers   = maxPlayers || 2;
+    this.sockets      = new Map();
+    this.state        = G.createInitialState(this.maxPlayers);
     this.state.currentJumper  = null;
     this.state.availableJumps = [];
+    this.turnTimer     = null;   // setTimeout 句柄
+    this.turnStartTime = null;   // 当前回合开始时间（ms）
+  }
+
+  /* ── 倒计时：每回合限时 60 秒 ── */
+  startTurnTimer() {
+    this.clearTurnTimer();
+    this.turnStartTime = Date.now();
+    this.turnTimer = setTimeout(() => this.handleTurnTimeout(), 60_000);
+  }
+
+  clearTurnTimer() {
+    if (this.turnTimer) { clearTimeout(this.turnTimer); this.turnTimer = null; }
+    this.turnStartTime = null;
+  }
+
+  handleTurnTimeout() {
+    if (this.state.phase !== 'play' || this.state.gameOver) return;
+    const s = this.state;
+    const timedOutPlayer = s.currentPlayer;
+    // 强制结束跳跃链并切换回合
+    s.inJumpChain    = false;
+    s.currentJumper  = null;
+    s.availableJumps = [];
+    s.currentPlayer  = G.nextTurnPlayer(s);
+    this.startTurnTimer();   // 给下一位玩家开始计时
+    this.broadcast(this.snapshot({ type: 'turn_timeout', timedOutPlayer }));
   }
 
   get playerCount() { return this.sockets.size; }
@@ -125,6 +152,7 @@ class Room {
       currentJumper : s.currentJumper,
       availableJumps: s.availableJumps,
       lastDrawnCard : s.lastDrawnCard,
+      turnStartTime : this.turnStartTime,
       lastAction    : lastAction || null,
     };
   }
@@ -215,6 +243,7 @@ wss.on('connection', (ws) => {
         if (done) {
           room.state.phase         = 'play';
           room.state.currentPlayer = 1;
+          room.startTurnTimer();  // 开始P1的第一个回合计时
         }
         room.broadcast(room.snapshot({ type: 'card_drawn', player: expected, card, done }));
         break;
@@ -239,8 +268,8 @@ wss.on('connection', (ws) => {
             // 单步移动 → 立即结束回合
             G.movePiece(s, src, dst);
             const w = G.checkWin(s, s.currentPlayer);
-            if (w) s.gameOver = true;
-            else   s.currentPlayer = G.nextTurnPlayer(s);
+            if (w) { s.gameOver = true; room.clearTurnTimer(); }
+            else   { s.currentPlayer = G.nextTurnPlayer(s); room.startTurnTimer(); }
             room.broadcast(room.snapshot({ type: 'move', src, dst }));
 
           } else if (jumps.includes(dst)) {
@@ -251,12 +280,11 @@ wss.on('connection', (ws) => {
             s.availableJumps = G.continueJumps(s, dst);
 
             if (s.availableJumps.length === 0) {
-              // 无路可继续 → 自动结束
               const w = G.checkWin(s, s.currentPlayer);
               s.inJumpChain   = false;
               s.currentJumper = null;
-              if (w) s.gameOver = true;
-              else   s.currentPlayer = G.nextTurnPlayer(s);
+              if (w) { s.gameOver = true; room.clearTurnTimer(); }
+              else   { s.currentPlayer = G.nextTurnPlayer(s); room.startTurnTimer(); }
             }
             room.broadcast(room.snapshot({ type: 'move', src, dst }));
 
@@ -276,8 +304,8 @@ wss.on('connection', (ws) => {
           const w = G.checkWin(s, s.currentPlayer);
           s.inJumpChain   = false;
           s.currentJumper = null;
-          if (w) s.gameOver = true;
-          else   s.currentPlayer = G.nextTurnPlayer(s);
+          if (w) { s.gameOver = true; room.clearTurnTimer(); }
+          else   { s.currentPlayer = G.nextTurnPlayer(s); room.startTurnTimer(); }
         }
         room.broadcast(room.snapshot({ type: 'move', src, dst }));
         break;
@@ -293,8 +321,8 @@ wss.on('connection', (ws) => {
         s.inJumpChain   = false;
         s.currentJumper = null;
         s.availableJumps = [];
-        if (w) s.gameOver = true;
-        else   s.currentPlayer = G.nextTurnPlayer(s);
+        if (w) { s.gameOver = true; room.clearTurnTimer(); }
+        else   { s.currentPlayer = G.nextTurnPlayer(s); room.startTurnTimer(); }
         room.broadcast(room.snapshot({ type: 'end_jump' }));
         break;
       }
@@ -317,8 +345,8 @@ wss.on('connection', (ws) => {
         const pc = room.state.playerCount || 2;
         let w = null;
         for (let p = 1; p <= pc; p++) { w = G.checkWin(room.state, p); if (w) break; }
-        if (w) room.state.gameOver = true;
-        else   room.state.currentPlayer = room.state.currentPlayer === 1 ? 2 : 1;
+        if (w) { room.state.gameOver = true; room.clearTurnTimer(); }
+        else   { room.state.currentPlayer = G.nextTurnPlayer(room.state); room.startTurnTimer(); }
         room.broadcast(room.snapshot({ type: 'disk_rotated', cid, direction, steps: card.steps }));
         break;
       }
@@ -326,7 +354,8 @@ wss.on('connection', (ws) => {
       /* ── 重置 ── */
       case 'reset': {
         if (!room) return;
-        G.resetState(room.state, room.maxPlayers);  // 保留原始人数
+        room.clearTurnTimer();
+        G.resetState(room.state, room.maxPlayers);
         room.state.currentJumper  = null;
         room.state.availableJumps = [];
         room.broadcast(room.snapshot({ type: 'reset' }));
@@ -338,6 +367,7 @@ wss.on('connection', (ws) => {
   ws.on('close', () => {
     const room = ws._roomId ? rooms.get(ws._roomId) : null;
     if (!room) return;
+    room.clearTurnTimer();
     room.broadcast({ type: 'player_left', playerNum: ws._playerNum });
     room.sockets.delete(ws._playerNum);
     // 30 秒后清理空房间
