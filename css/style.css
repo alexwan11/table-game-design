@@ -1,3 +1,187 @@
+/* ----------------------------------------------------------------------
+ * style.css
+ * 还原原 tkinter 版本的配色与左右分栏布局。
+ * ------------------------------------------------------------------- */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: #f5f6f7;
+  font-family: "Microsoft YaHei", "PingFang SC", "Heiti SC", sans-serif;
+  color: #2c3e50;
+}
+
+.main-frame {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.left-frame canvas {
+  display: block;
+  background: #ecf0f1;
+  border-radius: 8px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}
+
+.right-frame {
+  width: 300px;
+  flex: 0 0 300px;
+  background: #dfe6e9;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.right-frame h1 {
+  margin: 4px 0 12px;
+  font-size: 20px;
+  text-align: center;
+}
+
+.right-frame h2 {
+  font-size: 14px;
+  margin: 16px 0 4px;
+}
+
+.status-box {
+  background: #2c3e50;
+  color: #fff;
+  font-weight: bold;
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 10px;
+  border-radius: 6px;
+  min-height: 40px;
+}
+
+.hand-count {
+  font-size: 12px;
+  color: #555;
+  text-align: center;
+  margin: 6px 0 2px;
+}
+
+.btn-row {
+  display: flex;
+  gap: 6px;
+  margin: 8px 0;
+}
+
+.btn-row button {
+  flex: 1;
+  padding: 7px 4px;
+  border: none;
+  border-radius: 5px;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+
+.btn-row button:hover:not(:disabled) { filter: brightness(0.95); }
+.btn-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.hint, .tip {
+  font-size: 12px;
+  color: #666;
+  line-height: 1.6;
+  margin: 4px 0;
+}
+
+hr {
+  border: none;
+  border-top: 2px solid #b2bec3;
+  margin: 12px 0;
+}
+
+.circle-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.circle-btn {
+  color: #fff;
+  border: none;
+  padding: 9px;
+  border-radius: 5px;
+  font-weight: bold;
+  font-size: 13px;
+  cursor: pointer;
+  transition: box-shadow 0.15s, opacity 0.15s;
+}
+
+.circle-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.circle-btn.active { box-shadow: inset 0 0 0 3px #2c3e50; }
+
+.dir-row {
+  display: flex;
+  justify-content: space-around;
+  margin: 10px 0;
+  font-size: 13px;
+}
+
+.dir-row label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+
+.label-sm {
+  font-size: 13px;
+  margin: 12px 0 4px;
+}
+
+.card-select {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 54px;
+  align-items: center;
+}
+
+.card-btn {
+  width: 56px;
+  height: 52px;
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  font-weight: bold;
+  font-size: 12px;
+  line-height: 1.3;
+  cursor: pointer;
+  transition: box-shadow 0.15s, opacity 0.15s;
+}
+
+.card-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.card-btn.selected { box-shadow: inset 0 0 0 3px #f1c40f; }
+
+.placeholder { font-size: 12px; color: #95a0a6; }
+
+.confirm-btn { background: #27ae60 !important; color: #fff; }
+
+.win-banner {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2c3e50;
+  color: #fff;
+  padding: 14px 30px;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+.win-banner.hidden { display: none; }
+
+@media (max-width: 760px) {
+  .main-frame { flex-direction: column; align-items: center; }
+  .right-frame { width: 100%; max-width: 600px; }
+}
 
 /* ── 倒计时 ── */
 .countdown-bar {
@@ -21,3 +205,117 @@
   from { opacity: 1; }
   to   { opacity: 0.45; }
 }
+
+/* ── 大厅遮罩样式 ── */
+.lobby-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  backdrop-filter: blur(4px);
+}
+.lobby-overlay.hidden { display: none; }
+
+.lobby-box {
+  background: #fff;
+  border-radius: 16px;
+  padding: 36px 40px;
+  width: 360px;
+  max-width: 94vw;
+  box-shadow: 0 24px 60px rgba(0,0,0,.35);
+  text-align: center;
+}
+.lobby-title { margin: 0 0 4px; font-size: 24px; color: #2c3e50; }
+.lobby-sub   { font-size: 13px; color: #7f8c8d; margin: 0 0 18px; }
+
+.lobby-status {
+  background: #f0f4f8;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #34495e;
+  margin-bottom: 22px;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lobby-actions { display: flex; flex-direction: column; gap: 12px; }
+
+.lobby-btn {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #bdc3c7;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  color: #2c3e50;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+}
+.lobby-btn:hover:not(:disabled) { border-color: #3498db; color: #3498db; }
+.lobby-btn.primary { background: #3498db; border-color: #3498db; color: #fff; }
+.lobby-btn.primary:hover:not(:disabled) { background: #2980b9; border-color: #2980b9; }
+.lobby-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.lobby-divider {
+  display: flex; align-items: center; gap: 10px;
+  color: #bdc3c7; font-size: 13px;
+}
+.lobby-divider::before, .lobby-divider::after {
+  content: ""; flex: 1; border-top: 1px solid #ecf0f1;
+}
+.lobby-join-row { display: flex; gap: 8px; }
+
+.lobby-input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 2px solid #bdc3c7;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .15em;
+  text-align: center;
+  text-transform: uppercase;
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+  transition: border-color .15s;
+}
+.lobby-input:focus { outline: none; border-color: #3498db; }
+.lobby-input:disabled { background: #f8f9fa; opacity: .5; }
+
+.lobby-room-info {
+  margin-top: 20px;
+  background: #f0f9ff;
+  border: 1px dashed #3498db;
+  border-radius: 10px;
+  padding: 14px;
+}
+.lobby-room-info p { margin: 0 0 8px; font-size: 13px; color: #2c3e50; }
+
+.room-id-row {
+  display: flex; align-items: center;
+  justify-content: center; gap: 10px; margin-bottom: 8px;
+}
+.room-id-display {
+  font-size: 26px; font-weight: 800;
+  letter-spacing: .25em; color: #2c3e50;
+  font-family: "Courier New", monospace;
+}
+.copy-btn {
+  padding: 5px 12px;
+  border: 1px solid #bdc3c7; border-radius: 5px;
+  background: #fff; font-size: 12px; cursor: pointer; color: #555;
+  transition: all .15s;
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+}
+.copy-btn:hover { border-color: #3498db; color: #3498db; }
+
+.lobby-waiting { font-size: 13px; color: #7f8c8d; margin: 0; }
+.player-label  { margin: 14px 0 0; font-size: 14px; font-weight: 700; }
