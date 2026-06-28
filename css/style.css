@@ -1,34 +1,72 @@
-/* ----------------------------------------------------------------------
- * style.css
- * 还原原 tkinter 版本的配色与左右分栏布局。
- * ------------------------------------------------------------------- */
+/* ------------------------------------------------------------------ *
+ * style.css  — 自适应版
+ * 桌面：左(棋盘) + 右(控制面板) 并排
+ * 手机/平板：上(棋盘) + 下(控制面板) 堆叠，画布缩放填满屏幕
+ * ------------------------------------------------------------------ */
 
-* { box-sizing: border-box; }
+/* ── 全局重置 ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { font-size: 16px; }
 
 body {
   margin: 0;
   background: #f5f6f7;
-  font-family: "Microsoft YaHei", "PingFang SC", "Heiti SC", sans-serif;
+  font-family: "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", sans-serif;
   color: #2c3e50;
+  -webkit-text-size-adjust: 100%;   /* 防止 iOS 字体自动缩放 */
 }
 
+/* ── 顶部返回栏 ── */
+.back-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: #2c3e50;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+  min-height: 44px;
+}
+.back-btn {
+  color: #ecf0f1;
+  font-size: 13px;
+  text-decoration: none;
+  opacity: .75;
+  white-space: nowrap;
+  transition: opacity .15s;
+}
+.back-btn:hover { opacity: 1; }
+.back-bar-title { color: #ecf0f1; font-size: 14px; font-weight: 700; }
+.back-bar-user  { margin-left: auto; font-size: 12px; color: #aaa; white-space: nowrap; }
+
+/* ── 主布局：左右分栏 ── */
 .main-frame {
   display: flex;
   align-items: flex-start;
-  gap: 16px;
-  padding: 16px;
-  max-width: 960px;
+  gap: 14px;
+  padding: 14px;
+  max-width: 980px;
   margin: 0 auto;
+}
+
+/* ── 左侧：棋盘画布 ── */
+.left-frame {
+  flex: 1 1 auto;
+  min-width: 0;           /* 允许 flex 子项收缩 */
 }
 
 .left-frame canvas {
   display: block;
+  width: 100%;            /* 填满容器，内部坐标系不变，ui.js 用 getBoundingClientRect 换算 */
+  height: auto;
   background: #ecf0f1;
   border-radius: 8px;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 10px rgba(0,0,0,.15);
   cursor: pointer;
+  touch-action: manipulation;   /* 移动端禁止双击缩放 */
 }
 
+/* ── 右侧：控制面板 ── */
 .right-frame {
   width: 300px;
   flex: 0 0 300px;
@@ -45,9 +83,10 @@ body {
 
 .right-frame h2 {
   font-size: 14px;
-  margin: 16px 0 4px;
+  margin: 14px 0 4px;
 }
 
+/* ── 状态框 ── */
 .status-box {
   background: #2c3e50;
   color: #fff;
@@ -57,35 +96,63 @@ body {
   padding: 10px;
   border-radius: 6px;
   min-height: 40px;
+  word-break: break-all;
 }
 
+/* ── 倒计时 ── */
+.countdown-bar {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 5px;
+  margin: 4px 0;
+  min-height: 28px;
+  transition: color .3s;
+  color: #27ae60;
+  letter-spacing: .08em;
+}
+.countdown-bar.warning { color: #e67e22; }
+.countdown-bar.urgent  {
+  color: #e74c3c;
+  animation: countdown-pulse .5s ease-in-out infinite alternate;
+}
+@keyframes countdown-pulse {
+  from { opacity: 1; }
+  to   { opacity: .45; }
+}
+
+/* ── 手牌计数 ── */
 .hand-count {
   font-size: 12px;
   color: #555;
   text-align: center;
   margin: 6px 0 2px;
+  line-height: 1.6;
 }
 
+/* ── 按钮行 ── */
 .btn-row {
   display: flex;
   gap: 6px;
   margin: 8px 0;
 }
-
 .btn-row button {
   flex: 1;
-  padding: 7px 4px;
+  padding: 9px 4px;
+  min-height: 44px;        /* 触控最小尺寸 */
   border: none;
   border-radius: 5px;
   background: #fff;
   font-size: 13px;
+  font-family: inherit;
   cursor: pointer;
-  transition: filter 0.15s;
+  transition: filter .15s;
 }
+.btn-row button:hover:not(:disabled) { filter: brightness(.95); }
+.btn-row button:disabled { opacity: .5; cursor: not-allowed; }
 
-.btn-row button:hover:not(:disabled) { filter: brightness(0.95); }
-.btn-row button:disabled { opacity: 0.5; cursor: not-allowed; }
-
+/* ── 提示文字 ── */
 .hint, .tip {
   font-size: 12px;
   color: #666;
@@ -99,40 +166,48 @@ hr {
   margin: 12px 0;
 }
 
+/* ── 圆盘按钮 ── */
 .circle-btns {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
-
 .circle-btn {
   color: #fff;
   border: none;
-  padding: 9px;
+  padding: 10px;
+  min-height: 44px;
   border-radius: 5px;
   font-weight: bold;
   font-size: 13px;
+  font-family: inherit;
   cursor: pointer;
-  transition: box-shadow 0.15s, opacity 0.15s;
+  transition: box-shadow .15s, opacity .15s;
 }
+.circle-btn:disabled { opacity: .45; cursor: not-allowed; }
+.circle-btn.active   { box-shadow: inset 0 0 0 3px #2c3e50; }
 
-.circle-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.circle-btn.active { box-shadow: inset 0 0 0 3px #2c3e50; }
-
+/* ── 方向选择 ── */
 .dir-row {
   display: flex;
   justify-content: space-around;
   margin: 10px 0;
   font-size: 13px;
 }
-
-.dir-row label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
-
-.label-sm {
-  font-size: 13px;
-  margin: 12px 0 4px;
+.dir-row label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 5px;
+  transition: background .15s;
 }
+.dir-row label:hover { background: rgba(0,0,0,.06); }
 
+.label-sm { font-size: 13px; margin: 12px 0 4px; }
+
+/* ── 手牌卡片选择区 ── */
 .card-select {
   display: flex;
   flex-wrap: wrap;
@@ -140,7 +215,6 @@ hr {
   min-height: 54px;
   align-items: center;
 }
-
 .card-btn {
   width: 56px;
   height: 52px;
@@ -150,86 +224,63 @@ hr {
   font-weight: bold;
   font-size: 12px;
   line-height: 1.3;
+  font-family: inherit;
   cursor: pointer;
-  transition: box-shadow 0.15s, opacity 0.15s;
+  transition: box-shadow .15s, opacity .15s;
+  touch-action: manipulation;
 }
-
-.card-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.card-btn:disabled { opacity: .5; cursor: not-allowed; }
 .card-btn.selected { box-shadow: inset 0 0 0 3px #f1c40f; }
 
 .placeholder { font-size: 12px; color: #95a0a6; }
 
 .confirm-btn { background: #27ae60 !important; color: #fff; }
 
+/* ── 胜利横幅 ── */
 .win-banner {
   position: fixed;
-  top: 24px;
+  top: 16px;
   left: 50%;
   transform: translateX(-50%);
   background: #2c3e50;
   color: #fff;
-  padding: 14px 30px;
+  padding: 14px 28px;
   border-radius: 10px;
   font-size: 18px;
   font-weight: bold;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-  z-index: 10;
+  box-shadow: 0 4px 16px rgba(0,0,0,.3);
+  z-index: 20;
+  white-space: nowrap;
+  max-width: 90vw;
+  text-align: center;
 }
-
 .win-banner.hidden { display: none; }
 
-@media (max-width: 760px) {
-  .main-frame { flex-direction: column; align-items: center; }
-  .right-frame { width: 100%; max-width: 600px; }
-}
-
-/* ── 倒计时 ── */
-.countdown-bar {
-  text-align: center;
-  font-size: 18px;
-  font-weight: 700;
-  padding: 4px 8px;
-  border-radius: 5px;
-  margin: 4px 0;
-  min-height: 28px;
-  transition: color 0.3s;
-  color: #27ae60;
-  letter-spacing: 0.08em;
-}
-.countdown-bar.warning { color: #e67e22; }
-.countdown-bar.urgent  {
-  color: #e74c3c;
-  animation: countdown-pulse 0.5s ease-in-out infinite alternate;
-}
-@keyframes countdown-pulse {
-  from { opacity: 1; }
-  to   { opacity: 0.45; }
-}
-
-/* ── 大厅遮罩样式 ── */
+/* ── 大厅遮罩 ── */
 .lobby-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.72);
+  background: rgba(0,0,0,.72);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 100;
   backdrop-filter: blur(4px);
+  padding: 16px;
 }
 .lobby-overlay.hidden { display: none; }
 
 .lobby-box {
   background: #fff;
   border-radius: 16px;
-  padding: 36px 40px;
-  width: 360px;
-  max-width: 94vw;
+  padding: 32px 36px;
+  width: 100%;
+  max-width: 380px;
   box-shadow: 0 24px 60px rgba(0,0,0,.35);
   text-align: center;
 }
-.lobby-title { margin: 0 0 4px; font-size: 24px; color: #2c3e50; }
-.lobby-sub   { font-size: 13px; color: #7f8c8d; margin: 0 0 18px; }
+.lobby-title { margin: 0 0 4px; font-size: 22px; color: #2c3e50; }
+.lobby-sub   { font-size: 13px; color: #7f8c8d; margin: 0 0 16px; }
 
 .lobby-status {
   background: #f0f4f8;
@@ -238,18 +289,19 @@ hr {
   font-size: 13px;
   font-weight: 600;
   color: #34495e;
-  margin-bottom: 22px;
-  min-height: 38px;
+  margin-bottom: 20px;
+  min-height: 42px;
   display: flex;
   align-items: center;
   justify-content: center;
+  line-height: 1.5;
 }
-
-.lobby-actions { display: flex; flex-direction: column; gap: 12px; }
+.lobby-actions { display: flex; flex-direction: column; gap: 10px; }
 
 .lobby-btn {
   width: 100%;
   padding: 12px;
+  min-height: 46px;
   border: 2px solid #bdc3c7;
   border-radius: 8px;
   background: #fff;
@@ -257,8 +309,9 @@ hr {
   font-weight: 700;
   color: #2c3e50;
   cursor: pointer;
-  transition: all 0.15s;
-  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+  transition: all .15s;
+  font-family: inherit;
+  touch-action: manipulation;
 }
 .lobby-btn:hover:not(:disabled) { border-color: #3498db; color: #3498db; }
 .lobby-btn.primary { background: #3498db; border-color: #3498db; color: #fff; }
@@ -277,21 +330,22 @@ hr {
 .lobby-input {
   flex: 1;
   padding: 10px 12px;
+  min-height: 46px;
   border: 2px solid #bdc3c7;
   border-radius: 8px;
-  font-size: 15px;
+  font-size: 16px;          /* 防止 iOS 自动缩放 */
   font-weight: 700;
   letter-spacing: .15em;
   text-align: center;
   text-transform: uppercase;
-  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+  font-family: inherit;
   transition: border-color .15s;
 }
 .lobby-input:focus { outline: none; border-color: #3498db; }
 .lobby-input:disabled { background: #f8f9fa; opacity: .5; }
 
 .lobby-room-info {
-  margin-top: 20px;
+  margin-top: 18px;
   background: #f0f9ff;
   border: 1px dashed #3498db;
   border-radius: 10px;
@@ -309,13 +363,97 @@ hr {
   font-family: "Courier New", monospace;
 }
 .copy-btn {
-  padding: 5px 12px;
-  border: 1px solid #bdc3c7; border-radius: 5px;
-  background: #fff; font-size: 12px; cursor: pointer; color: #555;
+  padding: 6px 14px;
+  min-height: 36px;
+  border: 1px solid #bdc3c7;
+  border-radius: 5px;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  color: #555;
   transition: all .15s;
-  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+  font-family: inherit;
+  touch-action: manipulation;
 }
 .copy-btn:hover { border-color: #3498db; color: #3498db; }
 
 .lobby-waiting { font-size: 13px; color: #7f8c8d; margin: 0; }
 .player-label  { margin: 14px 0 0; font-size: 14px; font-weight: 700; }
+
+/* ================================================================
+   响应式断点
+   ================================================================ */
+
+/* ── 平板（≤ 900px）：缩小侧边栏 ── */
+@media (max-width: 900px) {
+  .right-frame {
+    width: 260px;
+    flex: 0 0 260px;
+  }
+}
+
+/* ── 手机 / 小平板（≤ 700px）：竖向堆叠 ── */
+@media (max-width: 700px) {
+  .main-frame {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .left-frame {
+    width: 100%;
+  }
+
+  /* 画布宽度填满，高度按比例缩放（600:700 ≈ 6:7） */
+  .left-frame canvas {
+    border-radius: 6px;
+  }
+
+  .right-frame {
+    width: 100%;
+    flex: none;
+    padding: 12px;
+    border-radius: 8px;
+  }
+
+  /* 手机上标题已在返回栏显示，隐藏右侧 h1 节省空间 */
+  .right-frame h1 { display: none; }
+
+  .right-frame h2 { font-size: 13px; margin: 10px 0 3px; }
+
+  .status-box { font-size: 12px; padding: 8px; }
+
+  .countdown-bar { font-size: 16px; }
+
+  .hand-count { font-size: 11px; }
+
+  .tip { display: none; }    /* 提示文字在手机上隐藏，节省空间 */
+
+  /* 手牌卡片在手机上略大，更好触控 */
+  .card-btn {
+    width: 60px;
+    height: 56px;
+    font-size: 13px;
+  }
+
+  .win-banner {
+    font-size: 15px;
+    padding: 12px 20px;
+  }
+}
+
+/* ── 极小屏（≤ 380px）── */
+@media (max-width: 380px) {
+  .main-frame { padding: 6px; }
+
+  .right-frame { padding: 10px; }
+
+  .circle-btn { font-size: 12px; padding: 8px; }
+
+  .card-btn { width: 52px; height: 52px; font-size: 11px; }
+
+  .lobby-box { padding: 24px 20px; }
+
+  .room-id-display { font-size: 22px; letter-spacing: .18em; }
+}
