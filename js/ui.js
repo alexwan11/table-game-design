@@ -17,7 +17,8 @@
   /* ── WebSocket & 身份 ── */
   let ws              = null;
   let myPlayerNum     = null;
-  let countdownInterval = null;  // 倒计时刷新句柄   // 1 = 红方, 2 = 蓝方，加入房间后确定
+  let isSpectator     = false;   // 是否以观战者身份进入
+  let countdownInterval = null;   // 1 = 红方, 2 = 蓝方，加入房间后确定
 
   /* ── 游戏状态：服务端权威，客户端保留镜像 ── */
   let state = G.createInitialState();
@@ -132,8 +133,17 @@
     switch (msg.type) {
 
       case "error":
-        els.lobbyStatus.textContent = "❌ " + msg.message;
-        // 允许重新输入
+        if (msg.canSpectate) {
+          // 房间满：提供"改为观战"选项
+          els.lobbyStatus.textContent = "⚠ " + msg.message + "，你可以选择观战";
+          if (els.lobbySpectateHint) {
+            // 存入房间号供观战按钮使用
+            els.lobbySpectateHint.dataset.roomId = msg.roomId || els.roomInput.value.trim().toUpperCase();
+            els.lobbySpectateHint.classList.remove("hidden");
+          }
+        } else {
+          els.lobbyStatus.textContent = "❌ " + msg.message;
+        }
         els.btnCreate.disabled = false;
         els.btnJoin.disabled   = false;
         els.roomInput.disabled = false;
@@ -141,14 +151,23 @@
 
       case "joined":
         myPlayerNum = msg.playerNum;
-        els.playerLabel.textContent = `你是 ${B.PLAYER_NAME[msg.playerNum]}`;
-        els.playerLabel.style.color = B.PLAYER_COLOR[msg.playerNum];
-        if (msg.playerNum === 1) {
-          els.roomIdDisplay.textContent = msg.roomId;
-          els.lobbyRoomInfo.classList.remove("hidden");
-        }
-        if (msg.maxPlayers > 2) {
-          els.lobbyStatus.textContent = `已加入，等待更多玩家（1/${msg.maxPlayers}）…`;
+        isSpectator = msg.isSpectator === true;
+
+        if (isSpectator) {
+          els.playerLabel.textContent = "👁 观战模式";
+          els.playerLabel.style.color = "#7f8c8d";
+          els.lobbyStatus.textContent = "已进入观战，游戏加载中…";
+        } else {
+          els.playerLabel.textContent = `你是 ${B.PLAYER_NAME[msg.playerNum]}`;
+          els.playerLabel.style.color = B.PLAYER_COLOR[msg.playerNum];
+          if (msg.playerNum === 1) {
+            els.roomIdDisplay.textContent = msg.roomId;
+            els.lobbyRoomInfo.classList.remove("hidden");
+          }
+          if (msg.maxPlayers > 2) {
+            els.lobbyStatus.textContent =
+              `已加入，等待更多玩家（1/${msg.maxPlayers}）…`;
+          }
         }
         break;
 
@@ -163,6 +182,13 @@
 
       case "game_state":
         applyGameState(msg);
+        break;
+
+      case "spectator_count":
+        if (els.spectatorCount) {
+          els.spectatorCount.textContent =
+            msg.count > 0 ? `👁 ${msg.count} 名观众` : "";
+        }
         break;
 
       case "player_left":
@@ -199,7 +225,21 @@
     els.btnCreate.disabled = true;
     els.btnJoin.disabled   = true;
     els.roomInput.disabled = true;
-    send({ type: "join_room", roomId });
+    send({ type: "join_room", roomId, asSpectator: false });
+  }
+
+  function joinAsSpectator() {
+    // 优先从"房间已满"提示里读取已知房间号，其次用输入框
+    const hint   = els.lobbySpectateHint;
+    const roomId = (hint && hint.dataset.roomId)
+      ? hint.dataset.roomId
+      : (els.roomInput.value.trim().toUpperCase());
+    if (!roomId) { els.lobbyStatus.textContent = "⚠ 请输入房间号"; return; }
+    els.lobbyStatus.textContent = "正在以观战者身份加入…";
+    els.btnCreate.disabled = true;
+    els.btnJoin.disabled   = true;
+    els.roomInput.disabled = true;
+    send({ type: "join_room", roomId, asSpectator: true });
   }
 
   function copyRoomId() {
@@ -250,6 +290,10 @@
     state.totalDraftDraws  = msg.totalDraftDraws || 10;
     state.myPlayerNum      = myPlayerNum;
     state.turnStartTime    = msg.turnStartTime || null;
+    if (els.spectatorCount) {
+      els.spectatorCount.textContent =
+        (msg.spectatorCount > 0) ? `👁 ${msg.spectatorCount} 名观众` : "";
+    }
     state.currentJumper  = msg.currentJumper;
     state.availableJumps = msg.availableJumps || [];
     state.lastDrawnCard  = msg.lastDrawnCard;
@@ -345,9 +389,14 @@
     const x = (e.clientX - rect.left) * scaleX;
     const y = (e.clientY - rect.top)  * scaleY;
 
+    if (isSpectator) return;   // 观战者不能操作
+    if (isSpectator && state.phase === "play" && !state.gameOver) {
+      els.status.textContent = `👁 观战中：轮到 ${B.PLAYER_NAME[state.currentPlayer]} 走棋`;
+      return;
+    }
     if (state.phase === "draft") { handleDraftClick(x, y); return; }
     if (state.gameOver) return;
-    if (state.currentPlayer !== myPlayerNum) return; // 不是我的回合
+    if (state.currentPlayer !== myPlayerNum) return;
     if (state.rotatingCircle !== null) return;       // 正在配置旋转
 
     const cellKey = findClickedCell(x, y);
@@ -530,6 +579,14 @@
      控件状态更新
      ===================================================== */
   function updateControlsState() {
+    if (isSpectator) {
+      // 观战者：禁用全部交互控件
+      Object.values(els.circleBtns).forEach((b) => { b.disabled = true; b.classList.remove("active"); });
+      [els.dirCw, els.dirCcw, els.btnConfirm, els.btnCancel, els.btnEndJump].forEach((el) => { if(el) el.disabled = true; });
+      refreshCardSelector();
+      updateHandCounts();
+      return;
+    }
     const isMyTurn  = state.phase === "play" && !state.gameOver &&
                       state.currentPlayer === myPlayerNum;
     const hand      = state.phase === "play"
@@ -558,9 +615,13 @@
       els.cardSelect.innerHTML = '<span class="placeholder">（开局后才能使用卡牌）</span>';
       return;
     }
-    const hand = state.playerHands[myPlayerNum] || [];
+    const hand = isSpectator
+      ? (state.playerHands[state.currentPlayer] || [])
+      : (state.playerHands[myPlayerNum] || []);
     if (!hand.length) {
-      els.cardSelect.innerHTML = '<span class="placeholder">（你已无手牌，无法旋转圆盘）</span>';
+      els.cardSelect.innerHTML = isSpectator
+        ? '<span class="placeholder">（当前玩家无手牌）</span>'
+        : '<span class="placeholder">（你已无手牌，无法旋转圆盘）</span>';
       return;
     }
     const active = state.rotatingCircle !== null && state.currentPlayer === myPlayerNum;

@@ -51,7 +51,14 @@
         <div class="lobby-join-row">
           <input id="room-id-input" class="lobby-input"
                  placeholder="输入6位房间号" maxlength="6" disabled>
-          <button id="btn-join-room" class="lobby-btn" disabled>加入</button>
+          <button id="btn-join-room"     class="lobby-btn"          disabled>对战</button>
+          <button id="btn-spectate-room" class="lobby-btn spectate" disabled>观战</button>
+        </div>
+
+        <!-- 房间已满时显示的改为观战选项 -->
+        <div id="lobby-spectate-hint" class="lobby-spectate-hint hidden">
+          <span>房间已满，</span>
+          <button id="btn-join-spectator" class="lobby-btn-inline">改为观战 →</button>
         </div>
       </div>
 
@@ -80,6 +87,7 @@
       <div id="status-box" class="status-box"></div>
       <div id="countdown-bar" class="countdown-bar"></div>
       <div id="hand-count" class="hand-count"></div>
+      <div id="spectator-count" class="spectator-count"></div>
 
       <div class="btn-row">
         <button id="btn-reset">重新开始</button>

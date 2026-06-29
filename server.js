@@ -87,9 +87,12 @@ class Room {
     this.state        = G.createInitialState(this.maxPlayers);
     this.state.currentJumper  = null;
     this.state.availableJumps = [];
-    this.turnTimer     = null;   // setTimeout 句柄
-    this.turnStartTime = null;   // 当前回合开始时间（ms）
+    this.turnTimer     = null;
+    this.turnStartTime = null;
+    this.spectators    = new Set();  // 观战者 ws 集合
   }
+
+  get spectatorCount() { return this.spectators.size; }
 
   /* ── 倒计时：每回合限时 60 秒 ── */
   startTurnTimer() {
@@ -122,6 +125,7 @@ class Room {
   broadcast(msg) {
     const data = JSON.stringify(msg);
     this.sockets.forEach((ws) => { if (ws.readyState === 1) ws.send(data); });
+    this.spectators.forEach((ws) => { if (ws.readyState === 1) ws.send(data); });
   }
 
   sendTo(playerNum, msg) {
@@ -152,7 +156,8 @@ class Room {
       currentJumper : s.currentJumper,
       availableJumps: s.availableJumps,
       lastDrawnCard : s.lastDrawnCard,
-      turnStartTime : this.turnStartTime,
+      turnStartTime  : this.turnStartTime,
+      spectatorCount : this.spectatorCount,
       lastAction    : lastAction || null,
     };
   }
@@ -202,14 +207,43 @@ wss.on('connection', (ws) => {
 
       case 'join_room': {
         if (ws._roomId) return;
-        const id = (msg.roomId || '').toUpperCase().trim();
-        const target = rooms.get(id);
+        const id          = (msg.roomId || '').toUpperCase().trim();
+        const asSpectator = msg.asSpectator === true;
+        const target      = rooms.get(id);
+
         if (!target) {
           ws.send(JSON.stringify({ type: 'error', message: '房间不存在，请检查房间号' })); return;
         }
-        if (target.isFull()) {
-          ws.send(JSON.stringify({ type: 'error', message: '房间已满（已有两名玩家）' })); return;
+
+        if (asSpectator) {
+          // ── 观战者加入（无人数上限）──
+          target.spectators.add(ws);
+          ws._roomId      = id;
+          ws._playerNum   = 0;
+          ws._isSpectator = true;
+          ws.send(JSON.stringify({
+            type: 'joined', roomId: id, playerNum: 0, isSpectator: true,
+            maxPlayers: target.maxPlayers,
+          }));
+          // 把当前最新游戏状态推给新观战者
+          ws.send(JSON.stringify(target.snapshot({ type: 'spectator_joined' })));
+          // 广播最新观战人数
+          target.broadcast({ type: 'spectator_count', count: target.spectatorCount });
+          break;
         }
+
+        // ── 普通玩家加入 ──
+        if (target.isFull()) {
+          // 房间满：告知客户端可以转为观战
+          ws.send(JSON.stringify({
+            type: 'error',
+            message: '房间已满',
+            canSpectate: true,
+            roomId: id,
+          }));
+          return;
+        }
+
         const playerNum = target.playerCount + 1;
         target.sockets.set(playerNum, ws);
         ws._roomId    = id;
@@ -217,10 +251,8 @@ wss.on('connection', (ws) => {
         ws.send(JSON.stringify({ type: 'joined', roomId: id, playerNum, maxPlayers: target.maxPlayers }));
 
         if (target.isFull()) {
-          // 房间满员 → 开始游戏
           target.broadcast(target.snapshot({ type: 'game_start' }));
         } else {
-          // 还未满员 → 广播当前人数
           target.broadcast({
             type: 'waiting',
             maxPlayers: target.maxPlayers,
@@ -367,6 +399,13 @@ wss.on('connection', (ws) => {
   ws.on('close', () => {
     const room = ws._roomId ? rooms.get(ws._roomId) : null;
     if (!room) return;
+
+    if (ws._isSpectator) {
+      room.spectators.delete(ws);
+      room.broadcast({ type: 'spectator_count', count: room.spectatorCount });
+      return;
+    }
+
     room.clearTurnTimer();
     room.broadcast({ type: 'player_left', playerNum: ws._playerNum });
     room.sockets.delete(ws._playerNum);
