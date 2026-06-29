@@ -101,10 +101,9 @@
 
     ws.onopen = () => {
       els.lobbyStatus.textContent = "✅ 已连接，请创建或加入房间";
-      els.btnCreate.disabled  = false;
-      els.btnJoin.disabled    = false;
-      els.roomInput.disabled  = false;
-      if (els.btnSpectate) els.btnSpectate.disabled = false;
+      els.btnCreate.disabled = false;
+      els.btnJoin.disabled   = false;
+      els.roomInput.disabled = false;
     };
 
     ws.onclose = () => {
@@ -145,10 +144,9 @@
         } else {
           els.lobbyStatus.textContent = "❌ " + msg.message;
         }
-        els.btnCreate.disabled  = false;
-        els.btnJoin.disabled    = false;
-        els.roomInput.disabled  = false;
-        if (els.btnSpectate) els.btnSpectate.disabled = false;
+        els.btnCreate.disabled = false;
+        els.btnJoin.disabled   = false;
+        els.roomInput.disabled = false;
         break;
 
       case "joined":
@@ -213,10 +211,9 @@
 
   function createRoom() {
     els.lobbyStatus.textContent = "正在创建房间…";
-    els.btnCreate.disabled  = true;
-    els.btnJoin.disabled    = true;
-    els.roomInput.disabled  = true;
-    if (els.btnSpectate) els.btnSpectate.disabled = true;
+    els.btnCreate.disabled = true;
+    els.btnJoin.disabled   = true;
+    els.roomInput.disabled = true;
     const playerCount = Number(new URLSearchParams(location.search).get('players')) || 2;
     send({ type: "create_room", playerCount });
   }
@@ -225,10 +222,9 @@
     const roomId = els.roomInput.value.trim().toUpperCase();
     if (!roomId) { els.lobbyStatus.textContent = "⚠ 请先输入房间号"; return; }
     els.lobbyStatus.textContent = "正在加入房间…";
-    els.btnCreate.disabled  = true;
-    els.btnJoin.disabled    = true;
-    els.roomInput.disabled  = true;
-    if (els.btnSpectate) els.btnSpectate.disabled = true;
+    els.btnCreate.disabled = true;
+    els.btnJoin.disabled   = true;
+    els.roomInput.disabled = true;
     send({ type: "join_room", roomId, asSpectator: false });
   }
 
@@ -240,10 +236,9 @@
       : (els.roomInput.value.trim().toUpperCase());
     if (!roomId) { els.lobbyStatus.textContent = "⚠ 请输入房间号"; return; }
     els.lobbyStatus.textContent = "正在以观战者身份加入…";
-    els.btnCreate.disabled  = true;
-    els.btnJoin.disabled    = true;
-    els.roomInput.disabled  = true;
-    if (els.btnSpectate) els.btnSpectate.disabled = true;
+    els.btnCreate.disabled = true;
+    els.btnJoin.disabled   = true;
+    els.roomInput.disabled = true;
     send({ type: "join_room", roomId, asSpectator: true });
   }
 
