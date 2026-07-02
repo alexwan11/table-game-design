@@ -205,6 +205,26 @@ wss.on('connection', (ws) => {
         break;
       }
 
+      /* ── 查询房间状态（不加入，仅获取人数信息）── */
+      case 'query_room': {
+        const id     = (msg.roomId || '').toUpperCase().trim();
+        const target = rooms.get(id);
+        if (!target) {
+          ws.send(JSON.stringify({ type: 'room_info', found: false, roomId: id }));
+        } else {
+          ws.send(JSON.stringify({
+            type         : 'room_info',
+            found        : true,
+            roomId       : id,
+            playerCount  : target.playerCount,
+            maxPlayers   : target.maxPlayers,
+            spectatorCount: target.spectatorCount,
+            isFull       : target.isFull(),
+          }));
+        }
+        break;
+      }
+
       case 'join_room': {
         if (ws._roomId) return;
         const id          = (msg.roomId || '').toUpperCase().trim();

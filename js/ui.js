@@ -63,6 +63,10 @@
     els.lobbyRoomInfo = document.getElementById("lobby-room-info");
     els.playerLabel   = document.getElementById("player-label");
     els.btnCopyRoom   = document.getElementById("btn-copy-room");
+    els.btnSpectate      = document.getElementById('btn-spectate-room');
+    els.btnJoinSpectator = document.getElementById('btn-join-spectator');
+    els.lobbySpectateHint = document.getElementById('lobby-spectate-hint');
+    els.spectatorCount   = document.getElementById('spectator-count');
 
     // ── 事件绑定：游戏区 ──
     canvas.addEventListener("click", onCanvasClick);
@@ -84,6 +88,9 @@
     els.roomInput.addEventListener("keydown",
       (e) => { if (e.key === "Enter") joinRoom(); });
     els.btnCopyRoom.addEventListener("click", copyRoomId);
+    if (els.btnQueryRoom) els.btnQueryRoom.addEventListener('click', queryRoom);
+    if (els.btnJoin)      els.btnJoin.addEventListener('click', () => joinRoom(false));
+    if (els.btnSpectate)  els.btnSpectate.addEventListener('click', () => joinRoom(true));
 
     // 画初始空棋盘（大厅背景）
     Rd.drawBoard(ctx, state);
@@ -104,7 +111,7 @@
       els.btnCreate.disabled  = false;
       els.btnJoin.disabled    = false;
       els.roomInput.disabled  = false;
-      if (els.btnSpectate) els.btnSpectate.disabled = false;
+      if (els.btnQueryRoom) els.btnQueryRoom.disabled = false;
     };
 
     ws.onclose = () => {
@@ -186,6 +193,26 @@
         applyGameState(msg);
         break;
 
+      case "room_info":
+        if (!msg.found) {
+          els.lobbyStatus.textContent = "❌ 房间不存在，请检查房间号";
+          els.roomInput.disabled = false;
+          if (els.btnQueryRoom) els.btnQueryRoom.disabled = false;
+        } else {
+          // 显示房间信息和选择按钮
+          const isFull = msg.isFull;
+          els.roomQueryInfo.textContent =
+            `房间 ${msg.roomId}　玩家 ${msg.playerCount}/${msg.maxPlayers}　观众 ${msg.spectatorCount}`;
+          if (els.btnJoin) els.btnJoin.disabled = isFull;
+          if (isFull) {
+            els.lobbyStatus.textContent = `⚠ 房间已满（${msg.playerCount}/${msg.maxPlayers}），可以选择观战`;
+          } else {
+            els.lobbyStatus.textContent = `✅ 找到房间，选择以何种方式加入`;
+          }
+          if (els.lobbyQueryResult) els.lobbyQueryResult.classList.remove('hidden');
+        }
+        break;
+
       case "spectator_count":
         if (els.spectatorCount) {
           els.spectatorCount.textContent =
@@ -229,7 +256,7 @@
     els.btnJoin.disabled    = true;
     els.roomInput.disabled  = true;
     if (els.btnSpectate) els.btnSpectate.disabled = true;
-    send({ type: "join_room", roomId, asSpectator: false });
+
   }
 
   function joinAsSpectator() {

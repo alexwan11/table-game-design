@@ -48,17 +48,20 @@
           ＋ 创建房间
         </button>
         <div class="lobby-divider"><span>或者</span></div>
+        <!-- 输入框 + 查询按钮 -->
         <div class="lobby-join-row">
           <input id="room-id-input" class="lobby-input"
                  placeholder="输入6位房间号" maxlength="6" disabled>
-          <button id="btn-join-room"     class="lobby-btn"          disabled>对战</button>
-          <button id="btn-spectate-room" class="lobby-btn spectate" disabled>观战</button>
+          <button id="btn-query-room" class="lobby-btn" disabled>查询</button>
         </div>
 
-        <!-- 房间已满时显示的改为观战选项 -->
-        <div id="lobby-spectate-hint" class="lobby-spectate-hint hidden">
-          <span>房间已满，</span>
-          <button id="btn-join-spectator" class="lobby-btn-inline">改为观战 →</button>
+        <!-- 查询结果：房间信息 + 选择按钮（查询后显示）-->
+        <div id="lobby-room-query-result" class="lobby-room-query-result hidden">
+          <div id="room-query-info" class="room-query-info"></div>
+          <div class="lobby-join-choice-row">
+            <button id="btn-join-room"     class="lobby-btn primary"  >加入对战</button>
+            <button id="btn-spectate-room" class="lobby-btn spectate" >观战</button>
+          </div>
         </div>
       </div>
 
