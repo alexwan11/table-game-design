@@ -58,14 +58,15 @@
     els.lobbyStatus   = document.getElementById("lobby-status");
     els.btnCreate     = document.getElementById("btn-create-room");
     els.roomInput     = document.getElementById("room-id-input");
-    els.btnJoin       = document.getElementById("btn-join-room");
     els.roomIdDisplay = document.getElementById("room-id-display");
     els.lobbyRoomInfo = document.getElementById("lobby-room-info");
     els.playerLabel   = document.getElementById("player-label");
-    els.btnCopyRoom   = document.getElementById("btn-copy-room");
+    els.btnCopyRoom      = document.getElementById('btn-copy-room');
+    els.btnQueryRoom     = document.getElementById('btn-query-room');
+    els.btnJoin          = document.getElementById('btn-join-room');
     els.btnSpectate      = document.getElementById('btn-spectate-room');
-    els.btnJoinSpectator = document.getElementById('btn-join-spectator');
-    els.lobbySpectateHint = document.getElementById('lobby-spectate-hint');
+    els.lobbyQueryResult = document.getElementById('lobby-room-query-result');
+    els.roomQueryInfo    = document.getElementById('room-query-info');
     els.spectatorCount   = document.getElementById('spectator-count');
 
     // ── 事件绑定：游戏区 ──
